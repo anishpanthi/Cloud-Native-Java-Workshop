@@ -5,7 +5,7 @@ In this lab we'll utilize Spring Boot, Spring Data, and Spring Data REST to crea
 
 == Create a Hypermedia-Driven RESTful Web Service with Spring Data REST (using JPA)
 
-This application will create a simple reading list by asking for books you have read and storing them in a simple relational repository. We'll continue building upon the Spring Boot application we build in Lab 1.  The first stereotype we will need is the domain model itself, which is `City`.
+This application will create and expose a resource collection at "/cities" using Spring Data REST. We'll continue building upon the Spring Boot application we build in Lab 1.  The first stereotype we will need is the domain model itself, which is `City`.
 
 == Add the domain object - City
 . Create the package `io.pivotal.domain` and in that package create the class `City`. Into that file you can paste the following source code, which represents cities based on postal codes, global coordinates, etc:
@@ -20,7 +20,7 @@ public class City implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     @Column(nullable = false)
@@ -69,7 +69,6 @@ public class City implements Serializable {
 
     public void setLongitude(String longitude) { this.longitude = longitude; }
 }
-
 ---------------------------------------------------------------------
 +
 Notice that we're using JPA annotations on the class and its fields. You'll need to use your IDE's features to add the appropriate import statements.
@@ -84,22 +83,22 @@ package io.pivotal.repositories;
 public interface CityRepository extends PagingAndSortingRepository<City, Long> {
 }
 ---------------------------------------------------------------------
-
++
 You’ll need to use your IDE’s features to add the appropriate import statements.
 
-. Add JPA and REST Repository support to the +io.pivotal.CloudNativeSpringApplication+ Spring Boot Application class.
+. Add JPA and REST Repository support to the +io.pivotal.cloudnativespring.CloudNativeSpringApplication+ Spring Boot Application class.
 +
 [source,java]
 ---------------------------------------------------------------------
 @SpringBootApplication
-@RestController
-@EnableJpaRepositories // <---- Add this
-@Import(RepositoryRestMvcConfiguration.class) // <---- And this
+@EntityScan(basePackages = "io.pivotal.*")
+@EnableJpaRepositories(basePackages = "io.pivotal.*")
 public class CloudNativeSpringApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(CloudNativeSpringApplication.class, args);
+	    SpringApplication.run(CloudNativeSpringApplication.class, args);
     }
+
 }
 ---------------------------------------------------------------------
 
@@ -117,11 +116,10 @@ $ mvn clean spring-boot:run
 [source,bash]
 ---------------------------------------------------------------------
 $ curl -i http://localhost:8080/cities
-HTTP/1.1 200 OK
-Server: Apache-Coyote/1.1
+HTTP/1.1 200
 Content-Type: application/hal+json;charset=UTF-8
 Transfer-Encoding: chunked
-Date: Thu, 28 Apr 2016 14:44:06 GMT
+Date: Tue, 19 Feb 2019 00:56:16 GMT
 
 {
   "_embedded" : {
@@ -129,7 +127,8 @@ Date: Thu, 28 Apr 2016 14:44:06 GMT
   },
   "_links" : {
     "self" : {
-      "href" : "http://localhost:8080/cities"
+      "href" : "http://localhost:8080/cities{?page,size,sort}",
+      "templated" : true
     },
     "profile" : {
       "href" : "http://localhost:8080/profile/cities"
@@ -144,13 +143,14 @@ Date: Thu, 28 Apr 2016 14:44:06 GMT
 }
 ---------------------------------------------------------------------
 
-So what have you done? Created four small classes and one build file, resulting in a fully-functional REST microservice. The application's +DataSource+ is created automatically by Spring Boot using the in-memory database because no other +DataSource+ was detected in the project.
+
+So what have you done? Created three small classes and one build file, resulting in a fully-functional REST microservice. The application's +DataSource+ is created automatically by Spring Boot using the in-memory database because no other +DataSource+ was detected in the project.
 
 Next we'll import some data.
 
 == Importing Data
 
-. Add this https://raw.githubusercontent.com/Pivotal-Field-Engineering/CN-Workshop-TM/master/labs/lab02/import.sql[import.sql file] found in *CN-Workshop-TM/labs/lab02/* to +src/main/resources+. This is a rather large dataset containing all of the postal codes in the United States and its territories. This file will automatically be picked up by Hibernate and imported into the in-memory database.
+. Add this https://raw.githubusercontent.com/sharadg/Cloud-Native-Java-Workshop/master/labs/lab02/import.sql[import.sql file] found in *Cloud-Native-Java-Workshop/labs/lab02/* to +src/main/resources+. This is a rather large dataset containing all of the postal codes in the United States and its territories. This file will automatically be picked up by Hibernate and imported into the in-memory database.
 
 . Restart the application.
 +
@@ -164,23 +164,12 @@ $ mvn clean spring-boot:run
 [source,bash]
 ---------------------------------------------------------------------
 $ curl -i localhost:8080/cities
-HTTP/1.1 200 OK
-Server: Apache-Coyote/1.1
-X-Application-Context: application
-Content-Type: application/hal+json
+HTTP/1.1 200
+Content-Type: application/hal+json;charset=UTF-8
 Transfer-Encoding: chunked
-Date: Tue, 27 May 2014 19:59:58 GMT
+Date: Tue, 19 Feb 2019 01:33:20 GMT
 
 {
-  "_links" : {
-    "next" : {
-      "href" : "http://localhost:8080/cities?page=1&size=20"
-    },
-    "self" : {
-      "href" : "http://localhost:8080/cities{?page,size,sort}",
-      "templated" : true
-    }
-  },
   "_embedded" : {
     "cities" : [ {
       "name" : "HOLTSVILLE",
@@ -192,13 +181,13 @@ Date: Tue, 27 May 2014 19:59:58 GMT
       "_links" : {
         "self" : {
           "href" : "http://localhost:8080/cities/1"
+        },
+        "city" : {
+          "href" : "http://localhost:8080/cities/1"
         }
       }
-    },
-
-    // ...
-
-    {
+// (omitted...)
+    }, {
       "name" : "CASTANER",
       "county" : "LARES",
       "stateCode" : "PR",
@@ -208,9 +197,30 @@ Date: Tue, 27 May 2014 19:59:58 GMT
       "_links" : {
         "self" : {
           "href" : "http://localhost:8080/cities/20"
+        },
+        "city" : {
+          "href" : "http://localhost:8080/cities/20"
         }
       }
     } ]
+  },
+  "_links" : {
+    "first" : {
+      "href" : "http://localhost:8080/cities?page=0&size=20"
+    },
+    "self" : {
+      "href" : "http://localhost:8080/cities{?page,size,sort}",
+      "templated" : true
+    },
+    "next" : {
+      "href" : "http://localhost:8080/cities?page=1&size=20"
+    },
+    "last" : {
+      "href" : "http://localhost:8080/cities?page=2137&size=20"
+    },
+    "profile" : {
+      "href" : "http://localhost:8080/profile/cities"
+    }
   },
   "page" : {
     "size" : 20,
@@ -220,6 +230,7 @@ Date: Tue, 27 May 2014 19:59:58 GMT
   }
 }
 ---------------------------------------------------------------------
++
 
 . Try the following URL Paths in your browser or +curl+ to see how the application behaves:
 +
@@ -262,27 +273,40 @@ $ mvn clean spring-boot:run
 [source,bash]
 ---------------------------------------------------------------------
 $ curl -i "localhost:8080/cities"
-HTTP/1.1 200 OK
-Server: Apache-Coyote/1.1
-X-Application-Context: application
-Content-Type: application/hal+json
+HTTP/1.1 200
+Content-Type: application/hal+json;charset=UTF-8
 Transfer-Encoding: chunked
-Date: Tue, 27 May 2014 20:33:52 GMT
+Date: Tue, 19 Feb 2019 01:39:42 GMT
 
 {
   "_links" : {
-    "next" : {
-      "href" : "http://localhost:8080/cities?page=1&size=20"
+    "first" : {
+      "href" : "http://localhost:8080/cities?page=0&size=20"
     },
     "self" : {
       "href" : "http://localhost:8080/cities{?page,size,sort}",
       "templated" : true
     },
+    "next" : {
+      "href" : "http://localhost:8080/cities?page=1&size=20"
+    },
+    "last" : {
+      "href" : "http://localhost:8080/cities?page=2137&size=20"
+    },
+    "profile" : {
+      "href" : "http://localhost:8080/profile/cities"
+    },
     "search" : {
       "href" : "http://localhost:8080/cities/search"
     }
-},
-// (Remainder omitted...)
+  },
+  "page" : {
+    "size" : 20,
+    "totalElements" : 42741,
+    "totalPages" : 2138,
+    "number" : 0
+  }
+}
 ---------------------------------------------------------------------
 
 . Access the new +search+ endpoint:
@@ -292,30 +316,31 @@ http://localhost:8080/cities/search
 [source,bash]
 ---------------------------------------------------------------------
 $ curl -i "localhost:8080/cities/search"
-HTTP/1.1 200 OK
-Server: Apache-Coyote/1.1
-X-Application-Context: application
-Content-Type: application/hal+json
+HTTP/1.1 200
+Content-Type: application/hal+json;charset=UTF-8
 Transfer-Encoding: chunked
-Date: Tue, 27 May 2014 20:38:32 GMT
+Date: Tue, 19 Feb 2019 01:38:52 GMT
 
 {
   "_links" : {
+    "state" : {
+      "href" : "http://localhost:8080/cities/search/state{?q,page,size,sort}",
+      "templated" : true
+    },
     "postalCode" : {
       "href" : "http://localhost:8080/cities/search/postalCode{?q,page,size,sort}",
       "templated" : true
     },
-    "state" : {
-      "href" : "http://localhost:8080/cities/search/state{?q,page,size,sort}",
+    "nameContains" : {
+      "href" : "http://localhost:8080/cities/search/nameContains{?q,page,size,sort}",
       "templated" : true
     },
     "name" : {
       "href" : "http://localhost:8080/cities/search/name{?q,page,size,sort}",
       "templated" : true
     },
-    "nameContains" : {
-      "href" : "http://localhost:8080/cities/search/nameContains{?q,page,size,sort}",
-      "templated" : true
+    "self" : {
+      "href" : "http://localhost:8080/cities/search"
     }
   }
 }
@@ -346,15 +371,13 @@ $ mvn clean package
 ---------------------------------------------------------------------
 ---
 applications:
-- name: cloud-native-spring
-  host: cloud-native-spring
-  memory: 512M
-  instances: 1
-  path: ./target/cloud-native-spring-0.0.1-SNAPSHOT.jar
-  buildpack: java_buildpack_offline
-  timeout: 180 # to give time for the data to import
-  env:
-    JAVA_OPTS: -Djava.security.egd=file:///dev/urandom
+  - name: cloud-native-spring
+    random-route: true
+    memory: 1G
+    instances: 1
+    path: ./target/cloud-native-spring-0.0.1-SNAPSHOT.jar
+    timeout: 180 # to give time for the data to import
+    buildpack: java_buildpack
 ---------------------------------------------------------------------
 
 . Push to Cloud Foundry:
@@ -365,25 +388,28 @@ $ cf push
 
 ...
 
-1 of 1 instances running
+$ cf app cloud-native-spring
 
-App started
+Showing health and status for app cloud-native-spring in org mordor / space development as shgupta@pivotal.io...
 
-Showing health and status for app cloud-native-spring...
-OK
+name:              cloud-native-spring
+requested state:   started
+routes:            cloud-native-spring-reliable-mouse.cfapps.io
+last uploaded:     Mon 18 Feb 19:44:40 CST 2019
+stack:             cflinuxfs3
+buildpacks:        java_buildpack
 
-requested state: started
-instances: 1/1
-usage: 512M x 1 instances
-urls: cloud-native-spring.cf.mycloud.com
+type:           web
+instances:      1/1
+memory usage:   1024M
+     state     since                  cpu    memory         disk           details
+#0   running   2019-02-19T01:45:15Z   0.4%   321.2M of 1G   168.6M of 1G
 
-     state     since                    cpu    memory         disk
-#0   running   2014-05-27 04:15:05 PM   0.0%   433M of 512M   128.9M of 1G
 ---------------------------------------------------------------------
 
 . Access the application at the random route provided by CF:
 +
 [source,bash]
 ---------------------------------------------------------------------
-$ curl -i cloud-native-spring.cf.mycloud.com/cities
+$ curl -i cloud-native-spring-reliable-mouse.cfapps.io/cities
 ---------------------------------------------------------------------
