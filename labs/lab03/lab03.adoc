@@ -1,3 +1,4 @@
+:compat-mode:
 = Enhancing Boot Application with Metrics
 
 == Set up the Actuator
@@ -512,7 +513,7 @@ Spring Boot provides an endpoint http://localhost:8080/actuator/metrics that exp
 ---------------------------------------------------------------------
 +
 
-. Select one of the metrics from this list and append to /actuator/metrics, such as http://localhost:8080/actuator/metrics/http.server.requests. Review the metric details.
+. Select one of the metrics from this list and append to +/actuator/metrics+, such as http://localhost:8080/actuator/metrics/http.server.requests. Review the metric details.
 +
 [source,json]
 ---------------------------------------------------------------------
@@ -578,7 +579,7 @@ Spring Boot provides an endpoint http://localhost:8080/actuator/metrics that exp
 }
 ---------------------------------------------------------------------
 
-. Further, these are multi-dimensional metrics so you can further drill down into them by appending +?tag=key:value+ at the end of the metric, such as /actuator/metrics/http.server.requests?tag=status:200, such as http://localhost:8080/actuator/metrics/http.server.requests?tag=status:200. Review the metric details.
+. Further, these are multi-dimensional metrics so you can further drill down into them by appending +?tag=key:value+ at the end of the metric, such as +/actuator/metrics/http.server.requests?tag=status:200+, such as http://localhost:8080/actuator/metrics/http.server.requests?tag=status:200. Review the metric details.
 +
 [source,json]
 ---------------------------------------------------------------------
@@ -713,7 +714,10 @@ applications:
 
 . Push application into Cloud Foundry
 +
+[source,bash]
+---------------------------------------------------------------------
 $ cf push
+---------------------------------------------------------------------
 
 . Find the URL created for your app in the health status report. Browse to your app.  Also view your application details in the Apps Mananger UI:
 +

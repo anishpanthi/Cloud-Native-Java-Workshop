@@ -1,8 +1,9 @@
+:compat-mode:
 = Adding Spring Cloud Config to Boot Application
 
 In this lab we'll utilize Spring Boot and Spring Cloud to configure our application from a configuration source dynamically retrieved from a git repository. We'll then deploy it to Pivotal Cloud Foundry and auto-provision an instance of a configuration server using Pivotal Spring Cloud Services.
 
-== Update _Hello_ REST service
+== Create _Hello_ REST service
 
 . These features are added by adding _spring-cloud-services-starter-config-client_ to the classpath.  Open your Maven POM found here: */cloud-native-spring/pom.xml*.  Add the following spring cloud services dependency:
 +
@@ -14,7 +15,7 @@ In this lab we'll utilize Spring Boot and Spring Cloud to configure our applicat
 </dependency>
 ---------------------------------------------------------------------
 
-. We also need to add a general entry for Spring Cloud dependency management.  Add this snippet to your POM:
+. We also need to add an entry for bringing in Spring Cloud dependency management.  Add this snippet to your POM:
 +
 [source, xml]
 ---------------------------------------------------------------------
@@ -38,51 +39,26 @@ In this lab we'll utilize Spring Boot and Spring Cloud to configure our applicat
 </dependencyManagement>
 ---------------------------------------------------------------------
 
-. Add an @Value annotation, private field, and associated usage to the class _io.pivotal.cloudnativespring.CloudNativeSpringApplication_ (/cloud-native-spring/src/main/java/io/pivotal/cloudnativespring/CloudNativeSpringApplication.java):
-+
-[source, java, numbered]
----------------------------------------------------------------------
-    @Value("${greeting:Hola}")
-    private String _greeting;
-
-    @RequestMapping("/hello")
-    public String hello() {
-        return _greeting + " World!";
-    }
----------------------------------------------------------------------
-+
-Completed:
+. Add a new class HelloController to serve a basic REST endpoint at +/hello+. Add an @Value annotation to a private field which will hold the greeting: _io.pivotal.cloudnativespring.HelloController_ (/cloud-native-spring/src/main/java/io/pivotal/cloudnativespring/HelloController.java):
 +
 [source,java,numbered]
 ---------------------------------------------------------------------
 package io.pivotal.cloudnativespring;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@SpringBootApplication
-@EntityScan(basePackages = "io.pivotal.*")
-@EnableJpaRepositories(basePackages = "io.pivotal.*")
 @RestController
-public class CloudNativeSpringApplication {
-
-    public static void main(String[] args) {
-        SpringApplication.run(CloudNativeSpringApplication.class, args);
-    }
+public class HelloController {
 
     @Value("${greeting:Hola}")
-    private String _greeting;
+    private String greeting;
 
-    @RequestMapping("/hello")
-    public String hello() {
-        return _greeting + " World!";
+    @GetMapping("/hello")
+    public String sayHello() {
+        return greeting + " World!";
     }
-
 }
 ---------------------------------------------------------------------
 
@@ -97,15 +73,11 @@ spring.application.name=cloud-native-spring
 +
 [source, properties]
 ---------------------------------------------------------------------
-spring.h2.console.enabled=true
-spring.h2.console.path=/h2-console
 management.endpoints.web.exposure.include=*
 management.info.git.mode=full
 management.endpoint.health.show-details=always
+management.cloudfoundry.skip-ssl-validation=true
 spring.application.name=cloud-native-spring
-# hard code username/password so you don't have to use the randomly generated one
-spring.security.user.name=user
-spring.security.user.password=password
 ---------------------------------------------------------------------
 
 == Run the _cloud-native-spring_ Application and verify dynamic config is working
@@ -117,7 +89,61 @@ spring.security.user.password=password
 $ mvn clean spring-boot:run
 ---------------------------------------------------------------------
 
-. Browse to http://localhost:8080 and verify you now see your new greeting.
+. Because of automatic injection of +SecurityAutoConfiguration+ through Spring Cloud Services transitive dependencies, you would notice a form login starts to appear before you can browse to any endpoint.
++
+image::images/form_signin.jpg[]
+
+. In order to login, you need to use +user+ as username and you will see a random password scroll by whenever you start the spring boot application (we will shortly look at how to disable this behavior, not recommended for production!)
++
+[source,bash]
+---------------------------------------------------------------------
+2019-02-22 13:19:12.742  INFO 89719 --- [           main] .s.s.UserDetailsServiceAutoConfiguration :
+
+Using generated security password: ddbd8d76-1c0c-41ff-8d1a-35b1dc704098
+---------------------------------------------------------------------
+
+. Browse to http://localhost:8080/hello and verify you now see your new greeting.
+
+. Stop the _cloud-native-spring_ application
+
+. In order to disable security, first start by adding _spring-boot-starter-security_ to the classpath.  Open your Maven POM found here: */cloud-native-spring/pom.xml*.  Add the following spring boot dependency:
++
+[source, xml]
+---------------------------------------------------------------------
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+---------------------------------------------------------------------
+
+. Create a new +SecurityConfig+ class by adding io.pivotal.cloudnativespring.SecurityConfig (/cloud-native-spring/src/main/java/io/pivotal/cloudnativespring/SecurityConfig.java):
++
+[source, java]
+---------------------------------------------------------------------
+package io.pivotal.cloudnativespring;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+
+@Configuration
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.csrf().disable().authorizeRequests().anyRequest().permitAll();
+    }
+}
+---------------------------------------------------------------------
+
+. Run the application
++
+[source,bash]
+---------------------------------------------------------------------
+$ mvn clean spring-boot:run
+---------------------------------------------------------------------
+
+. Browse to http://localhost:8080/hello and verify you now see your greeting without being prompted for login.
 
 . Stop the _cloud-native-spring_ application
 
