@@ -5,98 +5,85 @@ In this lab we'll utilize Spring Boot, Spring Data, and Spring Data REST to crea
 
 == Create a Hypermedia-Driven RESTful Web Service with Spring Data REST (using JPA)
 
-This application will create and expose a resource collection at "/cities" using Spring Data REST. We'll continue building upon the Spring Boot application we build in Lab 1.  The first stereotype we will need is the domain model itself, which is `City`.
+This application will create and expose a resource collection at "/cities" using Spring Data REST. We'll continue building upon the Spring Boot application we built in Lab 1.  The first stereotype we will need is the domain model itself, which is `City`.
 
 == Add the domain object - City
-. Create the package `io.pivotal.domain` and in that package create the class `City`. Into that file you can paste the following source code, which represents cities based on postal codes, global coordinates, etc:
+. Create the package `io.pivotal.cloudnativespring.domain` and in that package create the class `City`. You can paste the following source code in that file, which represents Cities based on postal codes, global coordinates, etc:
 +
 [source, java, numbered]
 ---------------------------------------------------------------------
-package io.pivotal.domain;
+package io.pivotal.cloudnativespring.domain;
+
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 
 @Entity
-@Table(name="city")
-public class City implements Serializable {
-    private static final long serialVersionUID = 1L;
+@Data
+@NoArgsConstructor
+public class City {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(nullable = false)
+    @NonNull
     private String name;
 
-    @Column(nullable = false)
+    @NonNull
     private String county;
 
-    @Column(nullable = false)
+    @NonNull
     private String stateCode;
 
-    @Column(nullable = false)
+    @NonNull
     private String postalCode;
 
-    @Column
     private String latitude;
 
-    @Column
     private String longitude;
 
-    public String getName() { return name; }
-
-    public void setName(String name) { this.name = name; }
-
-    public String getPostalCode() { return postalCode; }
-
-    public void setPostalCode(String postalCode) { this.postalCode = postalCode; }
-
-    public long getId() { return id; }
-
-    public void setId(long id) { this.id = id; }
-
-    public String getStateCode() { return stateCode; }
-
-    public void setStateCode(String stateCode) { this.stateCode = stateCode; }
-
-    public String getCounty() { return county; }
-
-    public void setCounty(String county) { this.county = county; }
-
-    public String getLatitude() { return latitude; }
-
-    public void setLatitude(String latitude) { this.latitude = latitude; }
-
-    public String getLongitude() { return longitude; }
-
-    public void setLongitude(String longitude) { this.longitude = longitude; }
 }
 ---------------------------------------------------------------------
 +
-Notice that we're using JPA annotations on the class and its fields. You'll need to use your IDE's features to add the appropriate import statements.
+Notice that we're using Lombok annotations (@Data, @NoArgsConstructor, @NonNull) on the class, which reduces the need for a lot of boilerplate code in terms of Getters and Setters. You'll need to use your IDE's features to add the appropriate import statements.
 
-. Create the package +io.pivotal.repositories+ and in that package create the interface +CityRepository+. Paste the following code and add appropriate imports:
+. Create the package +io.pivotal.cloudnativespring.repositories+ and in that package create the interface +CityRepository+. Paste the following code and add appropriate imports:
 +
 [source,java]
 ---------------------------------------------------------------------
-package io.pivotal.repositories;
+package io.pivotal.cloudnativespring.repositories;
 
-@RepositoryRestResource(collectionResourceRel = "cities", path = "cities")
-public interface CityRepository extends PagingAndSortingRepository<City, Long> {
+import io.pivotal.cloudnativespring.domain.City;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+
+@RepositoryRestResource
+public interface CityRepository extends JpaRepository<City, Long> {
 }
 ---------------------------------------------------------------------
 +
 You’ll need to use your IDE’s features to add the appropriate import statements.
 
-. Add JPA and REST Repository support to the +io.pivotal.cloudnativespring.CloudNativeSpringApplication+ Spring Boot Application class.
+. You can remove the @RestController and the initial request handler from +io.pivotal.cloudnativespring.CloudNativeSpringApplication+ Spring Boot Application class to keep it simple.
 +
 [source,java]
 ---------------------------------------------------------------------
+package io.pivotal.cloudnativespring;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
 @SpringBootApplication
-@EntityScan(basePackages = "io.pivotal.*")
-@EnableJpaRepositories(basePackages = "io.pivotal.*")
 public class CloudNativeSpringApplication {
 
     public static void main(String[] args) {
-	    SpringApplication.run(CloudNativeSpringApplication.class, args);
+        SpringApplication.run(CloudNativeSpringApplication.class, args);
     }
 
 }
@@ -113,13 +100,15 @@ $ mvn clean spring-boot:run
 
 . Access the application using +curl+ or your web browser using the newly added REST repository endpoint at http://localhost:8080/cities. You'll see that the primary endpoint automatically exposes the ability to page, size, and sort the response JSON.
 +
+image::images/cities_endpoint.jpg[]
++
 [source,bash]
 ---------------------------------------------------------------------
 $ curl -i http://localhost:8080/cities
 HTTP/1.1 200
 Content-Type: application/hal+json;charset=UTF-8
 Transfer-Encoding: chunked
-Date: Tue, 19 Feb 2019 00:56:16 GMT
+Date: Fri, 22 Feb 2019 17:17:17 GMT
 
 {
   "_embedded" : {
@@ -167,7 +156,7 @@ $ curl -i localhost:8080/cities
 HTTP/1.1 200
 Content-Type: application/hal+json;charset=UTF-8
 Transfer-Encoding: chunked
-Date: Tue, 19 Feb 2019 01:33:20 GMT
+Date: Fri, 22 Feb 2019 17:15:54 GMT
 
 {
   "_embedded" : {
@@ -231,8 +220,11 @@ Date: Tue, 19 Feb 2019 01:33:20 GMT
 }
 ---------------------------------------------------------------------
 +
-
-. Try the following URL Paths in your browser or +curl+ to see how the application behaves:
+. You can also use browser to navigate to http://localhost:8080 which brings up the HAL (http://stateless.co/hal_specification.html[Hypertext Application Language]) Browser (for Spring Data REST) that we got by including *Rest Repositories HAL Browser* as one of the POM starter dependencies.
++
+image::images/hal_browser.jpg[]
++
+. Try the following URL Paths in your browser or +curl+ to see how the application behaves or through the HAL browser:
 +
 http://localhost:8080/cities?size=5
 +
@@ -254,11 +246,42 @@ Page<City> findByNameIgnoreCase(@Param("q") String name, Pageable pageable);
 @RestResource(path = "nameContains", rel = "nameContains")
 Page<City> findByNameContainsIgnoreCase(@Param("q") String name, Pageable pageable);
 
-@RestResource(path = "state", rel = "state")
+@RestResource(path = "stateCode", rel = "stateCode")
 Page<City> findByStateCodeIgnoreCase(@Param("q") String stateCode, Pageable pageable);
 
 @RestResource(path = "postalCode", rel = "postalCode")
 Page<City> findByPostalCode(@Param("q") String postalCode, Pageable pageable);
+---------------------------------------------------------------------
+
+. Completed:
++
+[source,java]
+---------------------------------------------------------------------
+package io.pivotal.cloudnativespring.repositories;
+
+import io.pivotal.cloudnativespring.domain.City;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.query.Param;
+import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import org.springframework.data.rest.core.annotation.RestResource;
+
+@RepositoryRestResource
+public interface CityRepository extends JpaRepository<City, Long> {
+
+    @RestResource(path = "name", rel = "name")
+    Page<City> findByNameIgnoreCase(@Param("q") String name, Pageable pageable);
+
+    @RestResource(path = "nameContains", rel = "nameContains")
+    Page<City> findByNameContainsIgnoreCase(@Param("q") String name, Pageable pageable);
+
+    @RestResource(path = "stateCode", rel = "stateCode")
+    Page<City> findByStateCodeIgnoreCase(@Param("q") String stateCode, Pageable pageable);
+
+    @RestResource(path = "postalCode", rel = "postalCode")
+    Page<City> findByPostalCode(@Param("q") String postalCode, Pageable pageable);
+}
 ---------------------------------------------------------------------
 
 . Run the application
@@ -276,9 +299,26 @@ $ curl -i "localhost:8080/cities"
 HTTP/1.1 200
 Content-Type: application/hal+json;charset=UTF-8
 Transfer-Encoding: chunked
-Date: Tue, 19 Feb 2019 01:39:42 GMT
+Date: Fri, 22 Feb 2019 17:36:42 GMT
 
 {
+  "_embedded" : {
+    "cities" : [ {
+      "name" : "HOLTSVILLE",
+      "county" : "SUFFOLK",
+      "stateCode" : "NY",
+      "postalCode" : "00501",
+      "latitude" : "+40.922326",
+      "longitude" : "-072.637078",
+      "_links" : {
+        "self" : {
+          "href" : "http://localhost:8080/cities/1"
+        },
+        "city" : {
+          "href" : "http://localhost:8080/cities/1"
+        }
+      }
+// ... omitted
   "_links" : {
     "first" : {
       "href" : "http://localhost:8080/cities?page=0&size=20"
@@ -319,14 +359,10 @@ $ curl -i "localhost:8080/cities/search"
 HTTP/1.1 200
 Content-Type: application/hal+json;charset=UTF-8
 Transfer-Encoding: chunked
-Date: Tue, 19 Feb 2019 01:38:52 GMT
+Date: Fri, 22 Feb 2019 17:46:49 GMT
 
 {
   "_links" : {
-    "state" : {
-      "href" : "http://localhost:8080/cities/search/state{?q,page,size,sort}",
-      "templated" : true
-    },
     "postalCode" : {
       "href" : "http://localhost:8080/cities/search/postalCode{?q,page,size,sort}",
       "templated" : true
@@ -337,6 +373,10 @@ Date: Tue, 19 Feb 2019 01:38:52 GMT
     },
     "name" : {
       "href" : "http://localhost:8080/cities/search/name{?q,page,size,sort}",
+      "templated" : true
+    },
+    "stateCode" : {
+      "href" : "http://localhost:8080/cities/search/stateCode{?q,page,size,sort}",
       "templated" : true
     },
     "self" : {
@@ -350,7 +390,7 @@ Note that we now have new search endpoints for each of the finders that we added
 
 . Try a few of these endpoints. Feel free to substitute your own values for the parameters.
 +
-http://localhost:8080/cities/search/postalCode?q=75202
+http://localhost:8080/cities/search/postalCode?q=75244
 +
 http://localhost:8080/cities/search/name?q=Boston
 +
@@ -375,9 +415,9 @@ applications:
     random-route: true
     memory: 1G
     instances: 1
-    path: ./target/cloud-native-spring-0.0.1-SNAPSHOT.jar
     timeout: 180 # to give time for the data to import
-    buildpack: java_buildpack
+    path: ./target/cloud-native-spring-0.0.1-SNAPSHOT.jar
+    buildpack: java_buildpack_offline
 ---------------------------------------------------------------------
 
 . Push to Cloud Foundry:
@@ -390,20 +430,20 @@ $ cf push
 
 $ cf app cloud-native-spring
 
-Showing health and status for app cloud-native-spring in org mordor / space development as shgupta@pivotal.io...
+Showing health and status for app cloud-native-spring in org Payments / space development as admin...
 
 name:              cloud-native-spring
 requested state:   started
-routes:            cloud-native-spring-reliable-mouse.cfapps.io
-last uploaded:     Mon 18 Feb 19:44:40 CST 2019
+routes:            cloud-native-spring-wacky-impala.apps.cnd-workshop.pcfdot.com
+last uploaded:     Fri 22 Feb 11:51:46 CST 2019
 stack:             cflinuxfs3
-buildpacks:        java_buildpack
+buildpacks:        java_buildpack_offline
 
 type:           web
 instances:      1/1
 memory usage:   1024M
      state     since                  cpu    memory         disk           details
-#0   running   2019-02-19T01:45:15Z   0.4%   321.2M of 1G   168.6M of 1G
+#0   running   2019-02-22T17:52:11Z   0.4%   249.8M of 1G   170.8M of 1G
 
 ---------------------------------------------------------------------
 
