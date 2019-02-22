@@ -13,7 +13,9 @@ Artifact:: +cloud-native-spring+
 
 . In the dependencies section, add the following manually:
 +
-*Web*, *Rest Repositories*, *JPA*, *H2*, *Actuator*
+*Web*, *Rest Repositories*, *JPA*, *H2*, *Actuator*, *Rest Repositories HAL Browser*, *Lombok*
+
+image::images/start_spring_io.jpg[]
 
 . Click the _Generate Project_ button. Your browser will download a zip file.
 
@@ -52,8 +54,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class CloudNativeSpringApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(CloudNativeSpringApplication.class, args);
+    	SpringApplication.run(CloudNativeSpringApplication.class, args);
     }
+
 }
 ---------------------------------------------------------------------
 
@@ -61,7 +64,7 @@ public class CloudNativeSpringApplication {
 +
 [source,java]
 ---------------------------------------------------------------------
-@RequestMapping("/")
+@RequestMapping("/hello")
 public String hello() {
     return "Hello World!";
 }
@@ -82,14 +85,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class CloudNativeSpringApplication {
 
-	public static void main(String[] args) {
-	    SpringApplication.run(CloudNativeSpringApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(CloudNativeSpringApplication.class, args);
+    }
 
-	@RequestMapping("/")
-	public String hello() {
-	    return "Hello World!";
-	}
+    @RequestMapping("/hello")
+    public String hello() {
+        return "Hello World!";
+    }
 
 }
 ---------------------------------------------------------------------
@@ -98,7 +101,7 @@ public class CloudNativeSpringApplication {
 
 . In a terminal, change working directory to *Cloud-Native-Java-Workshop/labs/lab01/cloud-native-spring*
 +
-$ cd Cloud-Native-Java-Workshop/labs/lab01/cloud-native-spring
+$ cd ~/Cloud-Native-Java-Workshop/labs/lab01/cloud-native-spring
 
 . Run the application
 +
@@ -112,7 +115,9 @@ $ mvn clean spring-boot:run
 2019-02-18 15:45:39.285  INFO 72558 --- [           main] i.p.c.CloudNativeSpringApplication       : Started CloudNativeSpringApplication in 6.551 seconds (JVM running for 11.177)
 ---------------------------------------------------------------------
 
-. Browse to http://localhost:8080
+. Browse to http://localhost:8080/hello
++
+image::images/hello_world.jpg[]
 
 . Stop the _cloud-native-spring_ application. In the terminal window: *Ctrl + C*
 
@@ -140,14 +145,38 @@ applications:
     memory: 1G
     instances: 1
     path: ./target/cloud-native-spring-0.0.1-SNAPSHOT.jar
-    buildpack: java_buildpack
+    buildpack: java_buildpack_offline
 
 ---------------------------------------------------------------------
 
 . Push application into Cloud Foundry
 +
-$ cf push -f manifest.yml
+[source,bash]
+---------------------------------------------------------------------
+$ cf push
+---------------------------------------------------------------------
 
 . Find the URL created for your app in the health status report. Browse to your app.
+[source,bash]
+---------------------------------------------------------------------
+$ cf app cloud-native-spring
+
+Showing health and status for app cloud-native-spring in org Payments / space development as admin...
+
+name:              cloud-native-spring
+requested state:   started
+routes:            cloud-native-spring-wacky-impala.apps.cnd-workshop.pcfdot.com
+last uploaded:     Fri 22 Feb 09:18:03 CST 2019
+stack:             cflinuxfs3
+buildpacks:        java_buildpack_offline
+
+type:           web
+instances:      1/1
+memory usage:   1024M
+     state     since                  cpu    memory         disk           details
+#0   running   2019-02-22T15:18:23Z   0.0%   205.8M of 1G   164.7M of 1G
+
+---------------------------------------------------------------------
+
 
 *Congratulations!* You’ve just completed your first Spring Boot application.

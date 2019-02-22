@@ -1,0 +1,8 @@
+---
+applications:
+  - name: cloud-native-spring
+    random-route: true
+    memory: 1G
+    instances: 1
+    path: ./target/cloud-native-spring-0.0.1-SNAPSHOT.jar
+    buildpack: java_buildpack_offline
