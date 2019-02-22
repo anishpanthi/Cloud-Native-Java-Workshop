@@ -28,6 +28,6 @@ Follow the prompts
 
 . Navigate in a web browser to https://api.sys.cnd-workshop.pcfdot.com
 
-. Login to the interface with your email and workshop password. Note the pasword will be supplied by the instructor on the day of delivery.
+. Login to the interface with your id and workshop password. Note the pasword will be supplied by the instructor on the day of delivery.
 
 . Click the 'Tools' link, and download the CLI matching your operating system

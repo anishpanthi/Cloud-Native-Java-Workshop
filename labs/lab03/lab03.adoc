@@ -14,7 +14,7 @@ Spring Boot includes a number of additional features to help you monitor and man
 </dependency>
 ---------------------------------------------------------------------
 
-. By default Spring Boot will only expose "health" and "info" endpoints (which is a good thing!). As part of our demo app, we will choose to expose all available actuator endpoints.  . Add the following properties to *cloud-native-spring/src/main/resources/application.properties*. You may have to create the file first.
+. By default, Spring Boot will only expose "health" and "info" endpoints (which is a good thing!). As part of our demo app, we will choose to expose all available actuator endpoints.  . Add the following properties to *cloud-native-spring/src/main/resources/application.properties*. You may have to create the file first.
 +
 [source, properties]
 ---------------------------------------------------------------------
@@ -87,13 +87,14 @@ One thing that _actuator_ does well is expose information about the specific bui
 +
 *NOTE* The path *../../../.git* refers to the .git directory at the root of the lab materials repo.
 +
-Completed:
+
+. Completed:
 +
 [source, xml]
 ---------------------------------------------------------------------
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -128,11 +129,20 @@ Completed:
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-rest-hal-browser</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -171,8 +181,8 @@ $ mvn clean spring-boot:run
 {
   "git": {
     "commit": {
-      "time": "2019-02-19T01:57:58Z",
-      "id": "a053ad3"
+      "time": "2019-02-22T17:55:02Z",
+      "id": "edcced7"
     },
     "branch": "master"
   }
@@ -212,7 +222,7 @@ $ mvn clean spring-boot:run
     "build": {
       "host": "Sharads-MacBook-Pro.local",
       "version": "0.0.1-SNAPSHOT",
-      "time": "2019-02-19T03:18:05Z",
+      "time": "2019-02-22T18:14:57Z",
       "user": {
         "name": "sharadg",
         "email": "91043+sharadg@users.noreply.github.com"
@@ -221,16 +231,16 @@ $ mvn clean spring-boot:run
     "branch": "master",
     "commit": {
       "message": {
-        "short": "updated to latest spring-boot",
-        "full": "updated to latest spring-boot"
+        "short": "Updated content for Lab02",
+        "full": "Updated content for Lab02"
       },
       "id": {
-        "describe": "a053ad3-dirty",
-        "abbrev": "a053ad3",
-        "describe-short": "a053ad3-dirty",
-        "full": "a053ad32236d1270825f033ff71c1a5cb2fcea51"
+        "describe": "edcced7-dirty",
+        "abbrev": "edcced7",
+        "describe-short": "edcced7-dirty",
+        "full": "edcced703bddf4832e371496afbfd0af7827c2f8"
       },
-      "time": "2019-02-19T01:57:58Z",
+      "time": "2019-02-22T17:55:02Z",
       "user": {
         "email": "91043+sharadg@users.noreply.github.com",
         "name": "sharadg"
@@ -253,12 +263,11 @@ $ mvn clean spring-boot:run
     "tags": "",
     "total": {
       "commit": {
-        "count": "168"
+        "count": "173"
       }
     }
   }
 }
-
 ---------------------------------------------------------------------
 
 . Stop the cloud-native-spring application.
@@ -303,31 +312,30 @@ Would your Ops team like to know if the app is close to running out of disk spac
 [source,json]
 ---------------------------------------------------------------------
 {
+  "status": "UP",
   "details": {
-      "db": {
-        "details": {
-          "database": "H2",
-          "hello": 1
-        },
-        "status": "UP"
-      },
-      "diskSpace": {
-         "details": {
-           "free": 92981194752,
-           "threshold": 10485760,
-           "total": 499963170816
-         },
-      "status": "UP"
+    "db": {
+      "status": "UP",
+      "details": {
+        "database": "H2",
+        "hello": 1
       }
-   },
-  "status": "UP"
+    },
+    "diskSpace": {
+      "status": "UP",
+      "details": {
+        "total": 499963170816,
+        "free": 87024320512,
+        "threshold": 10485760
+      }
+    }
+  }
 }
-
 ---------------------------------------------------------------------
 
 . Stop the cloud-native-spring application.
 
-. Create the class _io.pivotal.FlappingHealthIndicator_ (/cloud-native-spring/src/main/java/io/pivotal/FlappingHealthIndicator.java) and into it paste the following code:
+. Create the class _io.pivotal.cloudnativespring.FlappingHealthIndicator_ (/cloud-native-spring/src/main/java/io/pivotal/cloudnativespring/FlappingHealthIndicator.java) and into it paste the following code:
 +
 [source,java]
 ---------------------------------------------------------------------
@@ -341,16 +349,21 @@ import java.util.Random;
 
 @Component
 public class FlappingHealthIndicator implements HealthIndicator {
-
     private Random random = new Random(System.currentTimeMillis());
 
     @Override
     public Health health() {
         int result = random.nextInt(100);
-        if (result < 50) {
-            return Health.down().withDetail("flapper", "failure").withDetail("random", result).build();
+        if(result < 50) {
+            return Health.down()
+                         .withDetail("flapper", "failure")
+                         .withDetail("random", result)
+                         .build();
         } else {
-            return Health.up().withDetail("flapper", "ok").withDetail("random", result).build();
+            return Health.up()
+                         .withDetail("flapper", "ok")
+                         .withDetail("random", result)
+                         .build();
         }
     }
 }
@@ -370,31 +383,31 @@ $ mvn clean spring-boot:run
 [source,json]
 ---------------------------------------------------------------------
 {
+  "status": "UP",
   "details": {
+    "flapping": {
+      "status": "UP",
+      "details": {
+        "flapper": "ok",
+        "random": 76
+      }
+    },
     "db": {
+      "status": "UP",
       "details": {
         "database": "H2",
         "hello": 1
-      },
-      "status": "UP"
+      }
     },
     "diskSpace": {
+      "status": "UP",
       "details": {
-        "free": 92516966400,
-        "threshold": 10485760,
-        "total": 499963170816
-      },
-      "status": "UP"
-    },
-    "flapping": {
-      "details": {
-        "flapper": "failure",
-        "random": 26
-      },
-      "status": "DOWN"
+        "total": 499963170816,
+        "free": 86771916800,
+        "threshold": 10485760
+      }
     }
-  },
-  "status": "DOWN"
+  }
 }
 ---------------------------------------------------------------------
 
@@ -402,31 +415,31 @@ $ mvn clean spring-boot:run
 [source,json]
 ---------------------------------------------------------------------
 {
+  "status": "DOWN",
   "details": {
+    "flapping": {
+      "status": "DOWN",
+      "details": {
+        "flapper": "failure",
+        "random": 25
+      }
+    },
     "db": {
+      "status": "UP",
       "details": {
         "database": "H2",
         "hello": 1
-      },
-      "status": "UP"
+      }
     },
     "diskSpace": {
+      "status": "UP",
       "details": {
-        "free": 92515479552,
-        "threshold": 10485760,
-        "total": 499963170816
-      },
-      "status": "UP"
-    },
-    "flapping": {
-      "details": {
-        "flapper": "ok",
-        "random": 72
-      },
-      "status": "UP"
+        "total": 499963170816,
+        "free": 86769766400,
+        "threshold": 10485760
+      }
     }
-  },
-  "status": "UP"
+  }
 }
 ---------------------------------------------------------------------
 
@@ -451,7 +464,6 @@ Spring Boot provides an endpoint http://localhost:8080/actuator/metrics that exp
     "jvm.gc.max.data.size",
     "jdbc.connections.max",
     "jdbc.connections.min",
-    "jvm.gc.pause",
     "jvm.memory.committed",
     "system.cpu.count",
     "logback.events",
@@ -479,6 +491,7 @@ Spring Boot provides an endpoint http://localhost:8080/actuator/metrics that exp
     "jvm.classes.loaded",
     "hikaricp.connections.max",
     "hikaricp.connections.min",
+    "jvm.gc.pause",
     "jvm.classes.unloaded",
     "tomcat.global.error",
     "tomcat.sessions.active.current",
@@ -504,6 +517,23 @@ Spring Boot provides an endpoint http://localhost:8080/actuator/metrics that exp
 [source,json]
 ---------------------------------------------------------------------
 {
+  "name": "http.server.requests",
+  "description": null,
+  "baseUnit": "seconds",
+  "measurements": [
+    {
+      "statistic": "COUNT",
+      "value": 13
+    },
+    {
+      "statistic": "TOTAL_TIME",
+      "value": 0.6496210789999999
+    },
+    {
+      "statistic": "MAX",
+      "value": 0.357688147
+    }
+  ],
   "availableTags": [
     {
       "tag": "exception",
@@ -522,6 +552,8 @@ Spring Boot provides an endpoint http://localhost:8080/actuator/metrics that exp
       "values": [
         "/actuator/metrics/{requiredMetricName}",
         "/actuator/health",
+        "/cities",
+        "/**/favicon.ico",
         "/actuator/metrics",
         "/**"
       ]
@@ -542,38 +574,68 @@ Spring Boot provides an endpoint http://localhost:8080/actuator/metrics that exp
         "200"
       ]
     }
-  ],
-  "baseUnit": "seconds",
+  ]
+}
+---------------------------------------------------------------------
+
+. Further, these are multi-dimensional metrics so you can further drill down into them by appending +?tag=key:value+ at the end of the metric, such as /actuator/metrics/http.server.requests?tag=status:200, such as http://localhost:8080/actuator/metrics/http.server.requests?tag=status:200. Review the metric details.
++
+[source,json]
+---------------------------------------------------------------------
+{
+  "name": "http.server.requests",
   "description": null,
+  "baseUnit": "seconds",
   "measurements": [
     {
       "statistic": "COUNT",
-      "value": 6.0
+      "value": 16
     },
     {
       "statistic": "TOTAL_TIME",
-      "value": 0.205781813
+      "value": 0.637164562
     },
     {
       "statistic": "MAX",
-      "value": 0.03030924
+      "value": 0.004182702
     }
   ],
-  "name": "http.server.requests"
+  "availableTags": [
+    {
+      "tag": "exception",
+      "values": [
+        "None"
+      ]
+    },
+    {
+      "tag": "method",
+      "values": [
+        "GET"
+      ]
+    },
+    {
+      "tag": "uri",
+      "values": [
+        "/actuator/metrics/{requiredMetricName}",
+        "/actuator/health",
+        "/cities",
+        "/**/favicon.ico",
+        "/actuator/metrics"
+      ]
+    },
+    {
+      "tag": "outcome",
+      "values": [
+        "SUCCESS"
+      ]
+    }
+  ]
 }
-
 ---------------------------------------------------------------------
 
 . Stop the cloud-native-spring application.
 
 == Deploy _cloud-native-spring_ to Pivotal Cloud Foundry
-. Build the application
-+
-[source,bash]
----------------------------------------------------------------------
-$ mvn clean package
----------------------------------------------------------------------
-
 . In order to add full build information to your artifact that is pushed to cloudfoundry, update */cloud-native-spring/pom.xml* and add the following execution and classifier to the spring-boot-maven-plugin:
 +
 [source, xml]
@@ -610,6 +672,30 @@ The full plugin config should look like the following:
 </plugin>
 ---------------------------------------------------------------------
 
+. Add the following properties to *cloud-native-spring/src/main/resources/application.properties*.
++
+[source, properties]
+---------------------------------------------------------------------
+management.cloudfoundry.skip-ssl-validation=true
+---------------------------------------------------------------------
++
+Completed:
++
+[source, properties]
+---------------------------------------------------------------------
+management.endpoints.web.exposure.include=*
+management.info.git.mode=full
+management.endpoint.health.show-details=always
+management.cloudfoundry.skip-ssl-validation=true
+---------------------------------------------------------------------
+
+. Build the application
++
+[source,bash]
+---------------------------------------------------------------------
+$ mvn clean package
+---------------------------------------------------------------------
+
 . By specifying a classifier we actually just produced 2 jars, one that is executable and one that can be used as an artifact that could be included in other apps (such as our Client UI app we'll create later).  Because of this we need to chance the name of the jar we included in our manifest.yml file.  Change the jar in the path property to *./target/cloud-native-spring-0.0.1-SNAPSHOT-exec.jar*:
 +
 [source, yaml]
@@ -620,13 +706,14 @@ applications:
     random-route: true
     memory: 1G
     instances: 1
-    path: ./target/cloud-native-spring-0.0.1-SNAPSHOT-exec.jar
     timeout: 180 # to give time for the data to import
-    buildpack: java_buildpack
+    path: ./target/cloud-native-spring-0.0.1-SNAPSHOT-exec.jar
+    buildpack: java_buildpack_offline
 ---------------------------------------------------------------------
+
 . Push application into Cloud Foundry
 +
-$ cf push -f manifest.yml
+$ cf push
 
 . Find the URL created for your app in the health status report. Browse to your app.  Also view your application details in the Apps Mananger UI:
 +

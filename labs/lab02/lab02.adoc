@@ -220,7 +220,16 @@ Date: Fri, 22 Feb 2019 17:15:54 GMT
 }
 ---------------------------------------------------------------------
 +
-. You can also use browser to navigate to http://localhost:8080 which brings up the HAL (http://stateless.co/hal_specification.html[Hypertext Application Language]) Browser (for Spring Data REST) that we got by including *Rest Repositories HAL Browser* as one of the POM starter dependencies.
+. You can also use browser to navigate to http://localhost:8080 which brings up the HAL (http://stateless.co/hal_specification.html[Hypertext Application Language]) Browser (for Spring Data REST) that we got by including *Rest Repositories HAL Browser* as one of the POM starter dependencies in file: */cloud-native-spring/pom.xml*.  You should see the following dependency in the list:
++
+[source, xml]
+---------------------------------------------------------------------
+<dependency>
+	<groupId>org.springframework.data</groupId>
+	<artifactId>spring-data-rest-hal-browser</artifactId>
+</dependency>
+---------------------------------------------------------------------
+
 +
 image::images/hal_browser.jpg[]
 +
