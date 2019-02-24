@@ -1,0 +1,14 @@
+---
+applications:
+  - name: cloud-native-spring
+    random-route: true
+    memory: 1G
+    instances: 1
+    timeout: 180 # to give time for the data to import
+    path: ./target/cloud-native-spring-0.0.1-SNAPSHOT-exec.jar
+    buildpack: java_buildpack_offline
+    env:
+      TRUST_CERTS: api.cnd-workshop.pcfdot.com
+    services:
+      - config-server
+      - service-registry
