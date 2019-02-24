@@ -13,7 +13,7 @@ public class CitiesController {
         this.feignCitiesClient = feignCitiesClient;
     }
 
-    @GetMapping("/cities")
+    @GetMapping("/")
     public String getCities(Model model) {
 
         model.addAttribute("cities", feignCitiesClient.getCities());
