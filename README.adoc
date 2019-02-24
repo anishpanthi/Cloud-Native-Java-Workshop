@@ -31,6 +31,6 @@ This one day hands-on classroom style session will provide developers with hands
 === To Be Continued...
 
   * Session 7: link:https://docs.google.com/presentation/d/1nHRUxpymKzGppWDzXKomIpLGuaTbK5qgL4S8Rdwia_c/present[_Spring Cloud - Service Discovery & Load Balancing_]
-  * Lab 5: link:[Microservice Service Discover and Load Balancing]
+  * Lab 5: link:labs/lab05/lab05.adoc[Microservice Service Discover and Load Balancing]
   * Session 8: link:https://docs.google.com/presentation/d/1aN9lyCk5oxK-FjcM_B_dK1HJAGg46stMfhuWjBY3rb8/present[_Spring Cloud - Circuit Breakers_]
-  * Lab 6: link:[Microservices Fault Tolerance with Circuit Breakers]
+  * Lab 6: link:labs/lab06/lab06.adoc[Microservices Fault Tolerance with Circuit Breakers]
