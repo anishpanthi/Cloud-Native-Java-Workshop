@@ -247,7 +247,7 @@ Completed dependencies:
 </dependencies>
 ---------------------------------------------------------------------
 
-. Since this UI is going to consume REST services, it's an awesome opportunity to use Feign.  Feign will handle *ALL* the work of invoking our services and marshalling/unmarshalling JSON into domain objects.  We'll add a Feign Client interface into our app.  Take note of how Feign references the downstream service; it's only the name of the service it will lookup from Eureka service registry.  Add the following interface declaration to the _CloudNativeSpringUIApplication_:
+. Since this UI is going to consume REST services, it's an awesome opportunity to use Feign.  Feign will handle *ALL* the work of invoking our services and marshalling/unmarshalling JSON into domain objects.  We'll add a Feign Client interface into our app.  Take note of how Feign references the downstream service; it's only the name of the service it will lookup from Eureka service registry.  Add the following interface declaration to the _CloudNativeSpringUiApplication_:
 +
 [source,java,numbered]
 ---------------------------------------------------------------------
@@ -452,7 +452,10 @@ applications:
 $ cf push
 ---------------------------------------------------------------------
 
-. Test your application by navigating to the URL of the application, which should show the Thymeleaf template with list of cities.
+. Test your application by navigating to the URL of the application, which should show the Thymeleaf template. You should now see a table listing the first set of rows returned from the cities microservice
++
+image::images/ui.jpg[]
+
 
 . From a commandline stop the cloud-native-spring microservice (the original city service, not the new UI)
 +

@@ -10,3 +10,4 @@ applications:
       TRUST_CERTS: api.cnd-workshop.pcfdot.com
     services:
       - service-registry
+      - circuit-breaker-dashboard
