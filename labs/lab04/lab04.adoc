@@ -218,7 +218,7 @@ $ mvn clean package
 $ cf push -f manifest.yml
 ---------------------------------------------------------------------
 
-. Test your application by navigating to the root URL of the application, which will invoke the hello() service.  You should now see a greeting that is read from the cloud config server!
+. Test your application by navigating to the +/hello+ endpoint of the application, which will invoke the hello() service.  You should now see a greeting that is read from the cloud config server!
 +
 *Bon Jour World!*
 

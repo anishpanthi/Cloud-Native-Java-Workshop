@@ -1,1 +1,3 @@
 = Labs Content
+
+link:labaccess.adoc[Hands-On Lab]
