@@ -8,12 +8,13 @@ Note: You may need to follow these instructions link:https://docs.cloudfoundry.o
 
 == Agenda
 
-::
 Intro (30 mins)::
  * Intro: link:https://docs.google.com/presentation/d/1P0x81ukzqWZHN9ieXMl9Pqz0iXwYBpHz6sv-Wjkd1DY/present[_Agenda and Resources_]
 Session 1 (45 mins)::
  * link:https://docs.google.com/presentation/d/1XcYzl_VrYcCFS_W_7J-vGk05Td86otPZ9s8_4nHUXVM/present[_Cloud Native & Domain Driven Design, Microservices_]
+
 Break (15 mins)::
+
 Session 2 (45 mins)::
  * link:https://docs.google.com/presentation/d/1kYXvcxu6QWWIYW5dHHcFCAdyWsLA38SxOzp8Kh5r73M/present[_Introducing Spring Boot_]
  * Lab 1: link:labs/lab01/lab01.adoc[Building A Spring Boot Application]
@@ -21,10 +22,13 @@ Session 2 (45 mins)::
  Session 3 (30 mins)::
  * link:https://docs.google.com/presentation/d/1lzdPJUQ4kz9XiS5wpfrjUipMaEgZuOKkQCXh7DfAPWE/present[_Polyglot Persistence with Spring Data REST_]
  * Lab 2: link:labs/lab02/lab02.adoc[Build a Hypermedia-Driven RESTful Web Service with Spring Data REST]
+
 Break (15 mins)::
+
 Session 4 (45 mins)::
  * link:https://docs.google.com/presentation/d/1QU3cjVsrGX6uTN6y4gCEK4eYmm0xQL6BEldWa7kI0AA/present[_Advancing Spring Boot with Actuator and Profiles_]
  * Lab 3: link:labs/lab03/lab03.adoc[Enhancing Boot Application with Metrics]
+
 Session 5 (15 mins)::
   * link:https://docs.google.com/presentation/d/14XDQakQoXrffQHJ2b7DILFCn092_YYZEpIrHfaJKaIU/present[_Introducing Spring Cloud_]
 
